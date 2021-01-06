@@ -1,7 +1,7 @@
 import Foundation
 import FMake
 
-//OutputLevel.default = .error
+OutputLevel.default = .error
 
 enum Config {
   static let opensshOrigin = "https://github.com/openssh/openssh-portable.git"

@@ -16,9 +16,12 @@ jobs:
     - name: xcode-select
       run: sudo xcode-select -s /Applications/Xcode_12.3.app
 
+    - name: install autoreconf
+      run: brew install automake
+
     - name: build-libssh
       run: swift run
-
+      
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1

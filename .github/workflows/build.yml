@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  build:
+    name: Building release assets
+    runs-on: macOS-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: xcode-select
+      run: sudo xcode-select -s /Applications/Xcode_12.3.app
+
+    - name: build-libssh
+      run: swift run
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body_path: release.md
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset Dynamic
+      id: upload-release-asset-dynamic
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: ./OpenSSH-dynamic.xcframework.zip
+        asset_name: OpenSSH-dynamic.xcframework.zip
+        asset_content_type: application/zip
+
+    - name: Upload Release Asset Static
+      id: upload-release-asset-static 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: ./OpenSSH-static.xcframework.zip
+        asset_name: OpenSSH-static.xcframework.zip
+        asset_content_type: application/zip

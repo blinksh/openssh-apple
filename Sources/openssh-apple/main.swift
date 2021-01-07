@@ -50,7 +50,19 @@ let opensslLibsRoot = "\(cwd)/openssl/libs/"
 var dynamicFrameworkPaths: [String] = []
 var staticFrameworkPaths: [String] = []
 
-var headers = ["ssherr.h", "sshbuf.h", "sshkey.h", "ssh-sk.h"]
+var headers = [
+  "authfd.h",
+  "authfile.h",
+  "digest.h",
+  "match.h",
+  "ssh-sk.h",
+  "ssh.h",
+  "ssh2.h",
+  "sshbuf.h",
+  "ssherr.h",
+  "sshkey.h",
+  /* "ssh-pkcs11.h", */
+  ]
 
 for p in Config.platforms {
   var env = try [

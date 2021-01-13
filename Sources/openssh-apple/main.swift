@@ -65,10 +65,17 @@ var headers = [
   ]
 
 for p in Config.platforms {
+  let ldflags = "-fembed-bitcode"
+  let cflags = "-fembed-bitcode"
+  let cppflags = "-fembed-bitcode"
+
   var env = try [
     "PATH": ProcessInfo.processInfo.environment["PATH"] ?? "",
     "APPLE_PLATFORM": p.sdk,
     "APPLE_SDK_PATH": p.sdkPath(),
+    "LDFLAGS": ldflags,
+    "CFLAGS": cflags,
+    "CPPFLAGS": cppflags
   ]
 
   let sslDir = "\(opensslLibsRoot + p.name)/openssl"
@@ -84,11 +91,11 @@ for p in Config.platforms {
     print(p, arch)
 
     if p == .Catalyst {
-      env["LDFLAGS"] = "-target \(arch)-apple-ios14.0-macabi -arch \(arch)"
-      env["CFLAGS"]  = "-target \(arch)-apple-ios14.0-macabi -arch \(arch)"
+      env["LDFLAGS"] = "\(ldflags) -target \(arch)-apple-ios14.0-macabi -arch \(arch)"
+      env["CFLAGS"]  = "\(cflags) -target \(arch)-apple-ios14.0-macabi -arch \(arch)"
     } else {
-      env["LDFLAGS"] = "-arch \(arch)"
-      env["CFLAGS"]  = "-arch \(arch)"
+      env["LDFLAGS"] = "\(ldflags) -arch \(arch)"
+      env["CFLAGS"]  = "\(cflags) -arch \(arch)"
     }
     // env["CC"] = "xcrun -sdk \(p.sdk) clang -arch \(arch) -mios-version-min=14.0"
     env["CC"] = "xcrun -sdk \(p.sdk) clang -arch \(arch)"

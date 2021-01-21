@@ -21,3 +21,4 @@ release.md
 .build
 .swiftpm
 openssh-portable
+Package.resolved

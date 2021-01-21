@@ -14,6 +14,7 @@ enum Config {
   static let frameworkName = "OpenSSH"
   
   static let platforms: [Platform] = Platform.allCases
+  // static let platforms: [Platform] = [.iPhoneOS]
   // static let platforms: [Platform] = [Platform.Catalyst]
 }
 
@@ -30,7 +31,7 @@ extension Platform {
 
 try? sh("rm -rf openssh-portable")
 try sh("git clone --depth 1 \(Config.opensshOrigin) --branch \(Config.opensshBranch)")
-try sh("cp -f readpass.c openssh-portable/")
+try sh("cp -f readpass.c sshkey.h openssh-portable/")
 
 try download(url: Config.opensslLibsURL)
 try? sh("rm -rf openssl")

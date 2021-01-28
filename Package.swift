@@ -7,7 +7,7 @@ let package = Package(
     name: "openssh-apple",
     platforms: [.macOS("11")],
     dependencies: [
-        .package(url: "https://github.com/yury/FMake", from : "0.0.6"),
+        .package(url: "https://github.com/yury/FMake", from : "0.0.15"),
     //    .package(path: "../FMake")
     ],
     targets: [

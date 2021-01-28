@@ -32,6 +32,8 @@ extension Platform {
 try? sh("rm -rf openssh-portable")
 try sh("git clone --depth 1 \(Config.opensshOrigin) --branch \(Config.opensshBranch)")
 try sh("cp -f readpass.c sshkey.h openssh-portable/")
+try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_init(/openssh_init(/' {} \\;")
+try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_free(/openssh_free(/' {} \\;")
 
 try download(url: Config.opensslLibsURL)
 try? sh("rm -rf openssl")
@@ -90,14 +92,8 @@ for p in Config.platforms {
   
   for arch in p.archs {
     print(p, arch)
-
-    if p == .Catalyst {
-      env["LDFLAGS"] = "\(ldflags) -target \(arch)-apple-ios14.0-macabi -arch \(arch)"
-      env["CFLAGS"]  = "\(cflags) -target \(arch)-apple-ios14.0-macabi -arch \(arch)"
-    } else {
-      env["LDFLAGS"] = "\(ldflags) -arch \(arch)"
-      env["CFLAGS"]  = "\(cflags) -arch \(arch)"
-    }
+    env["LDFLAGS"] = "\(ldflags) \(p.ccTarget(arch: arch)) -arch \(arch) \(p.ccMinVersionFlag(p.deploymentTarget))"
+    env["CFLAGS"]  = "\( cflags) \(p.ccTarget(arch: arch)) -arch \(arch) \(p.ccMinVersionFlag(p.deploymentTarget))"
     // env["CC"] = "xcrun -sdk \(p.sdk) clang -arch \(arch) -mios-version-min=14.0"
     env["CC"] = "xcrun -sdk \(p.sdk) clang -arch \(arch)"
     // env["CPP"] = "xcrun -sdk \(p.sdk) cpp"
@@ -148,7 +144,7 @@ for p in Config.platforms {
       "-framework Foundation",
       "-framework openssl",
       //"-arch \(arch)",
-      "-\(p.minSDKVersionName) \(p.deploymentTarget)",
+      "-\(p.plistMinSDKVersionName) \(p.deploymentTarget)",
       "-syslibroot \(p.sdkPath())",
       "-application_extension",
       "\(binPath)/obj/*.o"
@@ -165,7 +161,7 @@ for p in Config.platforms {
       "-framework Foundation",
       "-framework openssl",
       "-arch \(arch)",
-      "-\(p.minSDKVersionName) \(p.deploymentTarget)",
+      "-\(p.plistMinSDKVersionName) \(p.deploymentTarget)",
       "-syslibroot \(p.sdkPath())",
       "-compatibility_version 1.0.0",
       "-current_version 1.0.0",

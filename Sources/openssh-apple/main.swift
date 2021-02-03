@@ -253,7 +253,7 @@ try sh(
 )
 
 try cd("xcframeworks/dynamic/") {
-  try sh("zip -r ../../\(xcframeworkdDynamicZipName) \(xcframeworkName)")
+  try sh("zip --symlinks -r ../../\(xcframeworkdDynamicZipName) \(xcframeworkName)")
 }
 
 try sh(
@@ -262,7 +262,7 @@ try sh(
 
 
 try cd("xcframeworks/static/") {
-  try sh("zip -r ../../\(xcframeworkdStaticZipName) \(xcframeworkName)")
+  try sh("zip --symlinks -r ../../\(xcframeworkdStaticZipName) \(xcframeworkName)")
 }
 
 

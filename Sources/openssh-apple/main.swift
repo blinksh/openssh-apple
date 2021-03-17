@@ -31,7 +31,8 @@ extension Platform {
 
 try? sh("rm -rf openssh-portable")
 try sh("git clone --depth 1 \(Config.opensshOrigin) --branch \(Config.opensshBranch)")
-try sh("cp -f readpass.c sshkey.h authfd.h openssh-portable/")
+try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/__progname/blink__progname/' {} \\;")
+try sh("cp -f readpass.c sshkey.h authfd.h log.c ssh-sk-helper.c openssh-portable/")
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_init(/openssh_init(/' {} \\;")
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_free(/openssh_free(/' {} \\;")
 

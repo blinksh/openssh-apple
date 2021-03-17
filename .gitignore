@@ -22,3 +22,4 @@ release.md
 .swiftpm
 openssh-portable
 Package.resolved
+.vscode

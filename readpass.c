@@ -77,6 +77,6 @@ notify_start(int force_askpass, const char *fmt, ...)
 }
 
 void
-notify_complete(struct notifier_ctx *ctx)
+notify_complete(struct notifier_ctx *ctx, const char *fmt, ...)
 {
 }

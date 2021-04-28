@@ -5,8 +5,8 @@ OutputLevel.default = .error
 
 enum Config {
   static let opensshOrigin = "https://github.com/openssh/openssh-portable.git"
-  static let opensshBranch = "V_8_4"
-  static let opensshVersion = "8.4.0"
+  static let opensshBranch = "V_8_6"
+  static let opensshVersion = "8.6.0"
   
   static let opensslLibsURL       = "https://github.com/blinksh/openssl-apple/releases/download/v1.1.1i/openssl-libs.zip"
   static let opensslFrameworksURL = "https://github.com/blinksh/openssl-apple/releases/download/v1.1.1i/openssl-dynamic.frameworks.zip"
@@ -32,7 +32,7 @@ extension Platform {
 try? sh("rm -rf openssh-portable")
 try sh("git clone --depth 1 \(Config.opensshOrigin) --branch \(Config.opensshBranch)")
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/__progname/blink__progname/' {} \\;")
-try sh("cp -f readpass.c sshkey.h authfd.h log.c ssh-sk-helper.c openssh-portable/")
+try sh("cp -f readpass.c sshkey.h authfd.h log.c ssh-sk-helper.c misc.c openssh-portable/")
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_init(/openssh_init(/' {} \\;")
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_free(/openssh_free(/' {} \\;")
 

@@ -35,6 +35,8 @@ try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/__progn
 try sh("cp -f readpass.c sshkey.h authfd.h log.c ssh-sk-helper.c misc.c openssh-portable/")
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_init(/openssh_init(/' {} \\;")
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/ssh_free(/openssh_free(/' {} \\;")
+try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/match_pattern_list(/openssh_match_pattern_list(/' {} \\;")
+try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/match_hostname(/openssh_match_hostname(/' {} \\;")
 
 try download(url: Config.opensslLibsURL)
 try? sh("rm -rf openssl")

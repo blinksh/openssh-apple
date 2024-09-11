@@ -164,6 +164,7 @@ for p in Config.platforms {
       "-framework Foundation",
       "-framework openssl",
       "-arch \(arch)",
+      "-ld64",
       "-\(p.plistMinSDKVersionName) \(p.deploymentTarget)",
       "-syslibroot \(p.sdkPath())",
       "-compatibility_version 1.0.0",

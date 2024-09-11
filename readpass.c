@@ -1,4 +1,4 @@
-/* $OpenBSD: readpass.c,v 1.63 2020/08/11 09:45:54 djm Exp $ */
+/* $OpenBSD: readpass.c,v 1.69 2021/07/23 05:56:47 djm Exp $ */
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
@@ -50,19 +50,36 @@
 static char *
 ssh_askpass(char *askpass, const char *msg, const char *env_hint)
 {
-	return NULL;
+  // Blink disabled
+  return NULL;
 }
 
+/*
+ * Reads a passphrase from /dev/tty with echo turned off/on.  Returns the
+ * passphrase (allocated with xmalloc).  Exits if EOF is encountered. If
+ * RP_ALLOW_STDIN is set, the passphrase will be read from stdin if no
+ * tty is or askpass program is available
+ */
 char *
 read_passphrase(const char *prompt, int flags)
 {
-	return NULL;
+  // Blink disabled
+  return NULL;
 }
 
 int
 ask_permission(const char *fmt, ...)
 {
-	return 0;
+  // Blink disabled
+  return 0;
+}
+
+static void
+writemsg(const char *msg)
+{
+	(void)write(STDERR_FILENO, "\r", 1);
+	(void)write(STDERR_FILENO, msg, strlen(msg));
+	(void)write(STDERR_FILENO, "\r\n", 2);
 }
 
 struct notifier_ctx {
@@ -73,10 +90,12 @@ struct notifier_ctx {
 struct notifier_ctx *
 notify_start(int force_askpass, const char *fmt, ...)
 {
-	return NULL;
+  // Blink disabled
+  return NULL;
 }
 
 void
 notify_complete(struct notifier_ctx *ctx, const char *fmt, ...)
 {
+  // Blink disabled
 }

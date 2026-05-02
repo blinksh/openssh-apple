@@ -7,24 +7,38 @@ enum Config {
   static let opensshOrigin = "https://github.com/openssh/openssh-portable.git"
   static let opensshBranch = "V_8_9"
   static let opensshVersion = "8.9.0"
-  
-  static let opensslLibsURL       = "https://github.com/blinksh/openssl-apple/releases/download/v1.1.1k/openssl-libs.zip"
-  static let opensslFrameworksURL = "https://github.com/blinksh/openssl-apple/releases/download/v1.1.1k/openssl-dynamic.frameworks.zip"
-  
+
   static let frameworkName = "OpenSSH"
-  
+
   //static let platforms: [Platform] = Platform.allCases
   static let platforms: [Platform] = [.iPhoneOS, .iPhoneSimulator]
   //static let platforms: [Platform] = [Platform.MacOSX]
 }
 
 extension Platform {
+  var opensslPlatform: String {
+    sdk
+  }
+
   var deploymentTarget: String {
     switch self {
     case .AppleTVOS, .AppleTVSimulator,
          .iPhoneOS, .iPhoneSimulator: return "14.0"
     case .MacOSX, .Catalyst: return "11.0"
     case .WatchOS, .WatchSimulator: return "7.0"
+    }
+  }
+
+  var ldPlatformName: String {
+    switch self {
+    case .MacOSX: return "macos"
+    case .Catalyst: return "mac-catalyst"
+    case .iPhoneOS: return "ios"
+    case .iPhoneSimulator: return "ios-simulator"
+    case .AppleTVOS: return "tvos"
+    case .AppleTVSimulator: return "tvos-simulator"
+    case .WatchOS: return "watchos"
+    case .WatchSimulator: return "watchos-simulator"
     }
   }
 }
@@ -38,20 +52,11 @@ try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/match_p
 try sh("LC_CTYPE=C find ./openssh-portable -type f -exec sed -i '' -e 's/match_hostname(/openssh_match_hostname(/' {} \\;")
 try sh("cp -f authfd.h log.c misc.c readpass.c ssh-sk-helper.c ssh-sk.h sshkey.h openssh-portable/")
 
-try download(url: Config.opensslLibsURL)
-try? sh("rm -rf openssl")
-try? sh("mkdir -p openssl")
-try sh("unzip openssl-libs.zip -d openssl")
-
-
-try download(url: Config.opensslFrameworksURL)
-try? sh("rm -rf openssl-frameworks")
-try? sh("mkdir -p openssl-frameworks")
-try sh("unzip openssl-dynamic.frameworks.zip -d openssl-frameworks")
+try sh("git submodule update --init")
 
 let fm = FileManager.default
 let cwd = fm.currentDirectoryPath
-let opensslLibsRoot = "\(cwd)/openssl/libs/"
+let opensslRoot = "\(cwd)/openssl-kz"
 
 var dynamicFrameworkPaths: [String] = []
 var staticFrameworkPaths: [String] = []
@@ -70,10 +75,17 @@ var headers = [
   /* "ssh-pkcs11.h", */
   ]
 
-for p in Config.platforms {
-  let ldflags = "-fembed-bitcode"
-  let cflags = "-fembed-bitcode"
-  let cppflags = "-fembed-bitcode"
+// arm64e is excluded because the OpenSSL frameworks we link against
+// (krzyzanowskim) don't ship an arm64e slice.
+let platformBuilds: [(Platform, [Platform.Arch])] = Config.platforms.compactMap { p in
+  let archs = p.archs.filter { $0 != .arm64e }
+  return archs.isEmpty ? nil : (p, archs)
+}
+
+for (p, buildArchs) in platformBuilds {
+  let ldflags = ""
+  let cflags = ""
+  let cppflags = ""
 
   var env = try [
     "PATH": ProcessInfo.processInfo.environment["PATH"] ?? "",
@@ -84,7 +96,7 @@ for p in Config.platforms {
     "CPPFLAGS": cppflags
   ]
 
-  let sslDir = "\(opensslLibsRoot + p.name)/openssl"
+  let sslDir = "\(opensslRoot)/\(p.opensslPlatform)"
 
   let frameworkDynamicPath = "frameworks/dynamic/\(p.name)/\(Config.frameworkName).framework"
   let frameworkStaticPath = "frameworks/static/\(p.name)/\(Config.frameworkName).framework"
@@ -93,7 +105,7 @@ for p in Config.platforms {
 
   let targets = ["clean", "libssh.a", "openbsd-compat/libopenbsd-compat.a", "ssh-sk-helper"].joined(separator: " ")
   
-  for arch in p.archs {
+  for arch in buildArchs {
     print(p, arch)
     env["LDFLAGS"] = "\(ldflags) \(p.ccTarget(arch: arch)) -arch \(arch) \(p.ccMinVersionFlag(p.deploymentTarget))"
     env["CFLAGS"]  = "\( cflags) \(p.ccTarget(arch: arch)) -arch \(arch) \(p.ccMinVersionFlag(p.deploymentTarget))"
@@ -143,11 +155,11 @@ for p in Config.platforms {
       "-lSystem",
       "-lz",
       "-lresolv",
-      "-Fopenssl-frameworks/\(p.name)",
+      "-F\(opensslRoot)/Frameworks/\(p.opensslPlatform)",
       "-framework Foundation",
-      "-framework openssl",
+      "-framework OpenSSL",
       //"-arch \(arch)",
-      "-\(p.plistMinSDKVersionName) \(p.deploymentTarget)",
+      "-platform_version \(p.ldPlatformName) \(p.deploymentTarget) \(p.deploymentTarget)",
       "-syslibroot \(p.sdkPath())",
       "-application_extension",
       "\(binPath)/obj/*.o"
@@ -160,12 +172,11 @@ for p in Config.platforms {
       "-lSystem",
       "-lz",
       "-lresolv",
-      "-Fopenssl-frameworks/\(p.name)",
+      "-F\(opensslRoot)/Frameworks/\(p.opensslPlatform)",
       "-framework Foundation",
-      "-framework openssl",
+      "-framework OpenSSL",
       "-arch \(arch)",
-      "-ld64",
-      "-\(p.plistMinSDKVersionName) \(p.deploymentTarget)",
+      "-platform_version \(p.ldPlatformName) \(p.deploymentTarget) \(p.deploymentTarget)",
       "-syslibroot \(p.sdkPath())",
       "-compatibility_version 1.0.0",
       "-current_version 1.0.0",
@@ -197,12 +208,8 @@ for p in Config.platforms {
     )
   }
 
-  guard
-    let arch = p.archs.first
-  else {
-    continue
-  }
-  
+  let arch = buildArchs[0]
+
   let libPath = "lib/\(p.name)-\(arch).sdk"
   
   let plist = try p.plist(
@@ -223,13 +230,13 @@ for p in Config.platforms {
     try write(content: moduleMap, atPath: "\(path)/Modules/module.modulemap")
   }
   
-  let aFiles = p.archs.map { arch -> String in
+  let aFiles = buildArchs.map { arch -> String in
     "bin/\(p.name)-\(arch).sdk/tmp/*.a"
   }
-  
+
   try sh("libtool -static -o \(frameworkStaticPath)/\(Config.frameworkName) \(aFiles.joined(separator: " "))")
-  
-  let dylibFiles = p.archs.map { arch -> String in
+
+  let dylibFiles = buildArchs.map { arch -> String in
     "bin/\(p.name)-\(arch).sdk/\(Config.frameworkName)"
   }
   
